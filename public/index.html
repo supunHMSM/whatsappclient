@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Messages</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        #qrCode {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #messages {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .message {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .contact {
+            font-weight: bold;
+        }
+        img {
+            max-width: 100%;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>WhatsApp Messages</h1>
+
+    <div id="qrCode">
+        <h2>Scan the QR Code to Login</h2>
+        <div id = "qrcode"></div>
+    </div>
+
+    <div id="messages"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        socket.on('qr', (qr) => {
+            const qrDiv = document.getElementById('qrcode');
+            qrDiv.innerHTML = '';
+            img.src = `https://api.qrserver.com/v1/create-qr-code/?data=${qr}&size=200x200`;
+            qrDiv.appendChild(img);
+        });
+
+         // Notify when WhatsApp is ready and remove the QR code
+         socket.on('ready', () => {
+            document.getElementById('qrCode').style.display = 'none';
+        });
+
+        socket.on('whatsappMessage', (data) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+
+            const contactDiv = document.createElement('div');
+            contactDiv.classList.add('contact');
+            contactDiv.textContent = `Contact: ${data.contact.pushname || data.contact.number}`;
+
+            const messageBodyDiv = document.createElement('div');
+            messageBodyDiv.textContent = `Message: ${data.message}`;
+
+            messageDiv.appendChild(contactDiv);
+            messageDiv.appendChild(messageBodyDiv);
+
+            document.getElementById('messages').appendChild(messageDiv);
+        });
+
+        socket.on('whatsappMedia', (data) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+
+            const contactDiv = document.createElement('div');
+            contactDiv.classList.add('contact');
+            contactDiv.textContent = `Contact: ${data.contact.pushname || data.contact.number}`;
+
+            const messageBodyDiv = document.createElement('div');
+            messageBodyDiv.textContent = `Message: ${data.message}`;
+
+            const img = document.createElement('img');
+            img.src = data.mediaUrl;
+
+            messageDiv.appendChild(contactDiv);
+            messageDiv.appendChild(messageBodyDiv);
+            messageDiv.appendChild(img);
+
+            document.getElementById('messages').appendChild(messageDiv);
+        });
+    </script>
+</body>
+</html>
